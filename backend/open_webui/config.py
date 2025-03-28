@@ -2463,3 +2463,41 @@ LDAP_CA_CERT_FILE = PersistentConfig(
 LDAP_CIPHERS = PersistentConfig(
     "LDAP_CIPHERS", "ldap.server.ciphers", os.environ.get("LDAP_CIPHERS", "ALL")
 )
+
+# Email verification settings
+ENABLE_EMAIL_VERIFICATION = PersistentConfig(
+    "ENABLE_EMAIL_VERIFICATION",
+    "auth.ENABLE_EMAIL_VERIFICATION",
+    os.environ.get("ENABLE_EMAIL_VERIFICATION", "True").lower() == "true",
+)
+
+# SMTP Server settings
+SMTP_SERVER = PersistentConfig(
+    "SMTP_SERVER",
+    "email.SMTP_SERVER",
+    os.environ.get("SMTP_SERVER", ""),
+)
+
+SMTP_PORT = PersistentConfig(
+    "SMTP_PORT",
+    "email.SMTP_PORT",
+    int(os.environ.get("SMTP_PORT", 587)),
+)
+
+SMTP_USERNAME = PersistentConfig(
+    "SMTP_USERNAME", 
+    "email.SMTP_USERNAME",
+    os.environ.get("SMTP_USERNAME", ""),
+)
+
+SMTP_PASSWORD = PersistentConfig(
+    "SMTP_PASSWORD",
+    "email.SMTP_PASSWORD",
+    os.environ.get("SMTP_PASSWORD", ""),
+)
+
+SMTP_SENDER_EMAIL = PersistentConfig(
+    "SMTP_SENDER_EMAIL",
+    "email.SMTP_SENDER_EMAIL",
+    os.environ.get("SMTP_SENDER_EMAIL", ""),
+)

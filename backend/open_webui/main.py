@@ -307,6 +307,12 @@ from open_webui.config import (
     AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
     AppConfig,
     reset_config,
+    ENABLE_EMAIL_VERIFICATION,
+    SMTP_SERVER,
+    SMTP_PORT,
+    SMTP_USERNAME,
+    SMTP_PASSWORD,
+    SMTP_SENDER_EMAIL,
 )
 from open_webui.env import (
     AUDIT_EXCLUDED_PATHS,
@@ -792,6 +798,13 @@ app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
 ########################################
 
 app.state.MODELS = {}
+
+app.state.config.ENABLE_EMAIL_VERIFICATION = ENABLE_EMAIL_VERIFICATION
+app.state.config.SMTP_SERVER = SMTP_SERVER
+app.state.config.SMTP_PORT = SMTP_PORT
+app.state.config.SMTP_USERNAME = SMTP_USERNAME
+app.state.config.SMTP_PASSWORD = SMTP_PASSWORD
+app.state.config.SMTP_SENDER_EMAIL = SMTP_SENDER_EMAIL
 
 
 class RedirectMiddleware(BaseHTTPMiddleware):

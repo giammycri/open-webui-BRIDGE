@@ -372,3 +372,21 @@ input[type='number'] {
 .hljs-strong {
 	font-weight: 700;
 }
+
+
+
+/*added*/
+body {
+	background-color: #e0f2fe !important;  /* Azzurro chiaro di Tailwind (sky-100) */
+	min-height: 100vh;
+  }
+  
+  /* Sovrascrivi gli sfondi dei contenitori principali */
+  .main-container, .dark\:bg-gray-800 {
+	background-color: transparent !important;
+  }
+  
+  /* Rimuovi eventuali immagini di sfondo */
+  .bg-gradient-to-br, .bg-cover {
+	background-image: none !important;
+  }

@@ -600,3 +600,20 @@
 	richColors
 	position="top-right"
 />
+
+
+
+
+<style global>
+  /* Sfondo per elementi specifici */
+  .chat-container, .settings-panel {
+    backgrou
+	
+	nd-color: #bae6fd !important;  /* Azzurro medio (sky-200) */
+  }
+
+  /* Sfondo per la sidebar */
+  nav.sidebar {
+    background-color: #7dd3fc !important;  /* Azzurro più intenso (sky-300) */
+  }
+</style>
