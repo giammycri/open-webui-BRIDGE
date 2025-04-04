@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { toast } from 'svelte-sonner';
 
 	import { onMount, getContext, tick } from 'svelte';
@@ -25,6 +25,7 @@
 	let name = '';
 	let email = '';
 	let password = '';
+	let confirmPassword = '';
 
 	let ldapUsername = '';
 
@@ -68,7 +69,18 @@
 			}
 		);
 
-		await setSessionUser(sessionUser);
+		 // Check if the user requires verification
+		if (sessionUser && sessionUser.role === "pending") {
+			// Save the email for the verification page
+			localStorage.setItem('pendingEmail', email);
+			toast.success($i18n.t('Account created! Please verify your email.'));
+			
+			// Redirect to the OTP verification page
+			goto(`/auth/verify-otp?email=${encodeURIComponent(email)}`);
+		} else if (sessionUser) {
+			// Standard behavior for admin or other roles
+			await setSessionUser(sessionUser);
+		}
 	};
 
 	const ldapSignInHandler = async () => {
@@ -111,6 +123,34 @@
 		}
 		localStorage.token = token;
 		await setSessionUser(sessionUser);
+	};
+
+	const handleSignup = async () => {
+		if (confirmPassword !== password) {
+			toast.error($i18n.t('Le password non corrispondono'));
+			return;
+		}
+		
+		try {
+			const response = await userSignUp(name, email, password, profileImageUrl);
+			
+			// Controlla se l'utente è in stato "unverified" (richiede verifica OTP)
+			if (response && response.role === "unverified") {
+				// Salva l'email per la pagina di verifica
+				localStorage.setItem('pendingEmail', email);
+				toast.success($i18n.t('Registrazione completata! Verifica la tua email.'));
+				
+				// Reindirizza alla pagina di verifica OTP
+				goto(`/auth/verify-otp?email=${encodeURIComponent(email)}`);
+			} else {
+				// Comportamento standard per altri casi (admin o altri ruoli)
+				localStorage.setItem('token', response.token);
+				await user.set(response);
+				goto('/');
+			}
+		} catch (error) {
+			toast.error($i18n.t(error));
+		}
 	};
 
 	let onboarding = false;
@@ -231,7 +271,7 @@
 
 								{#if $config?.onboarding ?? false}
 									<div class=" mt-1 text-xs font-medium text-gray-500">
-										ⓘ {$WEBUI_NAME}
+														ⓘ {$WEBUI_NAME}
 										{$i18n.t(
 											'does not make any external connections, and your data stays securely on your locally hosted server.'
 										)}

@@ -1,5 +1,8 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
+// Trova la dichiarazione della costante WEBUI_API_BASE_URL
+console.log("WEBUI_API_BASE_URL attuale:", WEBUI_API_BASE_URL);
+
 export const getAdminDetails = async (token: string) => {
 	let error = null;
 
@@ -287,41 +290,103 @@ export const userSignIn = async (email: string, password: string) => {
 };
 
 export const userSignUp = async (
-	name: string,
-	email: string,
-	password: string,
-	profile_image_url: string
+    name: string,
+    email: string,
+    password: string,
+    profile_image_url: string
 ) => {
-	let error = null;
+    let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signup`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		credentials: 'include',
-		body: JSON.stringify({
-			name: name,
-			email: email,
-			password: password,
-			profile_image_url: profile_image_url
-		})
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.log(err);
-			error = err.detail;
-			return null;
-		});
+    // Soluzione 1: Usa l'URL completo evitando WEBUI_API_BASE_URL
+    const res = await fetch("/api/v1/auths/signup", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name: name,
+            email: email,
+            password: password,
+            profile_image_url: profile_image_url
+        })
+    })
+    .then(async (res) => {
+        console.log("Signup response status:", res.status);
+        if (!res.ok) throw await res.json();
+        return res.json();
+    })
+    .catch((err) => {
+        console.log(err);
+        error = err.detail;
+        return null;
+    });
 
-	if (error) {
-		throw error;
-	}
+    if (error) {
+        throw error;
+    }
 
-	return res;
+    return res;
+};
+
+// Aggiungi questa nuova funzione per la verifica OTP se non esiste
+export const verifyOtp = async (email: string, otp: string) => {
+    let error = null;
+
+    const res = await fetch(`${WEBUI_API_BASE_URL}/auths/verify-otp`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: email,
+            otp: otp  // Usa lo stesso nome del campo definito nella classe OtpVerificationForm
+        })
+    })
+    .then(async (res) => {
+        if (!res.ok) throw await res.json();
+        return res.json();
+    })
+    .catch((err) => {
+        console.log(err);
+        error = err.detail;
+        return null;
+    });
+
+    if (error) {
+        throw error;
+    }
+
+    return res;
+};
+
+// Aggiungi anche questa funzione per il reinvio dell'OTP
+export const resendOtp = async (email: string) => {
+    let error = null;
+
+    const res = await fetch(`${WEBUI_API_BASE_URL}/auths/resend-otp`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: email
+        })
+    })
+    .then(async (res) => {
+        if (!res.ok) throw await res.json();
+        return res.json();
+    })
+    .catch((err) => {
+        console.log(err);
+        error = err.detail;
+        return null;
+    });
+
+    if (error) {
+        throw error;
+    }
+
+    return res;
 };
 
 export const userSignOut = async () => {

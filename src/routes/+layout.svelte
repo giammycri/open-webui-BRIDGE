@@ -601,15 +601,10 @@
 	position="top-right"
 />
 
-
-
-
 <style global>
   /* Sfondo per elementi specifici */
   .chat-container, .settings-panel {
-    backgrou
-	
-	nd-color: #bae6fd !important;  /* Azzurro medio (sky-200) */
+    background-color: #bae6fd !important;  /* Azzurro medio (sky-200) */
   }
 
   /* Sfondo per la sidebar */
