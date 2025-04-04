@@ -70,9 +70,12 @@ log.setLevel(SRC_LOG_LEVELS["MAIN"])
 ############################
 
 
-class SessionUserResponse(Token, UserResponse):
+class SessionUserResponse(UserResponse):
+    token: Optional[str] = None
+    token_type: str = "Bearer"
     expires_at: Optional[int] = None
     permissions: Optional[dict] = None
+    requires_verification: Optional[bool] = None
 
 
 @router.get("/", response_model=SessionUserResponse)
@@ -432,7 +435,7 @@ class OtpVerificationForm(BaseModel):
 
 @router.post("/signup", response_model=SessionUserResponse)
 async def signup(request: Request, response: Response, form_data: SignupForm):
-
+    # Existing authorization checks...
     if WEBUI_AUTH:
         if (
             not request.app.state.config.ENABLE_SIGNUP
@@ -457,80 +460,51 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
     try:
-        # Set role to admin if first user, otherwise "unverified" if email verification is enabled,
-        # or the default role if email verification is disabled
-        if user_count == 0:
-            role = "admin"
-        elif request.app.state.config.ENABLE_EMAIL_VERIFICATION:
-            role = "unverified"
-        else:
-            role = request.app.state.config.DEFAULT_USER_ROLE
+        role = "admin" if user_count == 0 else request.app.state.config.DEFAULT_USER_ROLE
+        
+        # If email verification is enabled, set role to "pending" 
+        if ENABLE_EMAIL_VERIFICATION and role != "admin":
+            role = "pending"
             
-        if user_count == 0:
-            # Disable signup after the first user is created
-            request.app.state.config.ENABLE_SIGNUP = False
-
         hashed = get_password_hash(form_data.password)
         user = Auths.insert_new_auth(
-            form_data.email.lower(),
-            hashed,
-            form_data.name,
-            form_data.profile_image_url,
-            role,
+            form_data.email.lower(), hashed, form_data.name, form_data.profile_image_url, role
         )
 
-        if user:
+        if not user:
+            raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+
+        # For admin users or when verification is disabled, create token and proceed normally
+        if user.role == "admin" or not ENABLE_EMAIL_VERIFICATION:
             expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
             expires_at = None
             if expires_delta:
                 expires_at = int(time.time()) + int(expires_delta.total_seconds())
-
+            
             token = create_token(
                 data={"id": user.id},
                 expires_delta=expires_delta,
             )
-
+            
+            # Set cookie for the token
             datetime_expires_at = (
                 datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
                 if expires_at
                 else None
             )
-
-            # Set the cookie token
             response.set_cookie(
                 key="token",
                 value=token,
                 expires=datetime_expires_at,
-                httponly=True,  # Ensures the cookie is not accessible via JavaScript
+                httponly=True,
                 samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
-
-            # Generate and send OTP if email verification is enabled
-            if request.app.state.config.ENABLE_EMAIL_VERIFICATION and role == "unverified":
-                otp = generate_otp(user.email)
-                # In development mode, just log the OTP
-                if ENV == "dev":
-                    log.info(f"Generated OTP for {user.email}: {otp}")
-                # Send OTP email
-                send_otp_email(user.email, otp, request.app.state.WEBUI_NAME)
-
-            if request.app.state.config.WEBHOOK_URL:
-                post_webhook(
-                    request.app.state.WEBUI_NAME,
-                    request.app.state.config.WEBHOOK_URL,
-                    WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-                    {
-                        "action": "signup",
-                        "message": WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-                        "user": user.model_dump_json(exclude_none=True),
-                    },
-                )
-
+            
             user_permissions = get_permissions(
                 user.id, request.app.state.config.USER_PERMISSIONS
             )
-
+            
             return {
                 "token": token,
                 "token_type": "Bearer",
@@ -541,33 +515,57 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                 "role": user.role,
                 "profile_image_url": user.profile_image_url,
                 "permissions": user_permissions,
-                "requires_verification": role == "unverified",
             }
         else:
-            raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+            # For pending users requiring email verification
+            # Generate OTP
+            otp = generate_otp(user.email)
+            
+            # Log for dev environment
+            if ENV == "dev":
+                log.info(f"Generated OTP for {user.email}: {otp}")
+            
+            # Send OTP email
+            send_otp_email(user.email, otp, request.app.state.WEBUI_NAME)
+            
+            # Return response without token for pending users
+            return {
+                "token_type": "Bearer",
+                "id": user.id,
+                "email": user.email,
+                "name": user.name,
+                "role": user.role,
+                "profile_image_url": user.profile_image_url,
+                "requires_verification": True
+            }
+            
     except Exception as err:
-        raise HTTPException(500, detail=ERROR_MESSAGES.DEFAULT(err))
+        log.exception(f"Error in signup: {err}")
+        raise HTTPException(500, detail=ERROR_MESSAGES.DEFAULT(str(err)))
 
 
 @router.post("/verify-otp", response_model=SessionUserResponse)
-async def verify_otp_endpoint(request: Request, form_data: OtpVerificationForm):
+async def verify_otp_endpoint(request: Request, response: Response, form_data: OtpVerificationForm):
     from open_webui.utils.otp import verify_otp
     
     email = form_data.email.lower()
     user = Users.get_user_by_email(email)
     
     if not user:
-        raise HTTPException(400, detail="User not found")
+        raise HTTPException(404, detail="User not found")
         
-    if user.role != "unverified":
-        # User already verified
-        raise HTTPException(400, detail="User already verified or doesn't require verification")
+    # Accetta sia "unverified" che "pending"
+    if user.role not in ["unverified", "pending"]:
+        raise HTTPException(400, detail="User does not require verification")
     
-    if verify_otp(email, form_data.otp):
-        # Update user role
+    # Usa form_data.otp invece di form_data.token
+    otp = form_data.otp
+    
+    if verify_otp(email, otp):
+        # Aggiorna il ruolo utente da pending a user
         user = Users.update_user_role_by_id(user.id, "user")
         
-        # Create a new token
+        # Genera token di accesso per l'utente verificato
         expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
         expires_at = None
         if expires_delta:
@@ -576,6 +574,21 @@ async def verify_otp_endpoint(request: Request, form_data: OtpVerificationForm):
         token = create_token(
             data={"id": user.id},
             expires_delta=expires_delta,
+        )
+        
+        # Imposta il cookie del token
+        datetime_expires_at = (
+            datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
+            if expires_at
+            else None
+        )
+        response.set_cookie(
+            key="token",
+            value=token,
+            expires=datetime_expires_at,
+            httponly=True,
+            samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+            secure=WEBUI_AUTH_COOKIE_SECURE,
         )
         
         user_permissions = get_permissions(
@@ -594,7 +607,30 @@ async def verify_otp_endpoint(request: Request, form_data: OtpVerificationForm):
             "permissions": user_permissions,
         }
     else:
-        raise HTTPException(400, detail="Invalid or expired OTP")
+        raise HTTPException(400, detail="Invalid verification code")
+
+
+class ResendOtpForm(BaseModel):
+    email: str
+
+@router.post("/resend-otp")
+async def resend_otp_endpoint(request: Request, form_data: ResendOtpForm):
+    user = Users.get_user_by_email(form_data.email)
+    # Modifica questa condizione per accettare "pending" oltre a "unverified"
+    if not user or user.role not in ["unverified", "pending"]:
+        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+    
+    # Genera un nuovo OTP
+    otp = generate_otp(user.email)
+    
+    # Log in modalità dev
+    if ENV == "dev":
+        log.info(f"[RESEND] Generated OTP for {user.email}: {otp}")
+    
+    # Invia l'OTP via email
+    send_otp_email(user.email, otp, request.app.state.WEBUI_NAME)
+    
+    return {"status": "success"}
 
 
 @router.get("/signout")
@@ -603,7 +639,7 @@ async def signout(request: Request, response: Response):
 
     if ENABLE_OAUTH_SIGNUP.value:
         oauth_id_token = request.cookies.get("oauth_id_token")
-        if oauth_id_token:
+        if (oauth_id_token):
             try:
                 async with ClientSession() as session:
                     async with session.get(OPENID_PROVIDER_URL.value) as resp:

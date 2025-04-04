@@ -1,3 +1,4 @@
+import random  # Aggiungi questa riga
 import secrets
 import time
 from typing import Dict, Tuple
@@ -7,25 +8,31 @@ otp_store: Dict[str, Tuple[str, int]] = {}  # email -> (otp, expiration_timestam
 OTP_EXPIRATION_SECONDS = 600  # 10 minutes
 
 def generate_otp(email: str) -> str:
-    """Generate a 6-digit OTP for the given email and store it"""
-    otp = ''.join(secrets.choice('0123456789') for _ in range(6))
-    expiration = int(time.time()) + OTP_EXPIRATION_SECONDS
-    otp_store[email] = (otp, expiration)
+    """Generate a 6-digit OTP code and store it with email as key"""
+    # Generate a 6-digit OTP
+    otp = ''.join(random.choices('0123456789', k=6))
+    
+    # Store the OTP in memory (versione semplificata invece di redis)
+    expiration_time = int(time.time()) + OTP_EXPIRATION_SECONDS
+    otp_store[email] = (otp, expiration_time)
+    
     return otp
 
 def verify_otp(email: str, otp: str) -> bool:
-    """Verify if the provided OTP is valid for the email"""
+    """Verify if the provided OTP matches the one stored for the email"""
     if email not in otp_store:
         return False
     
-    stored_otp, expiration = otp_store[email]
-    if time.time() > expiration:
+    stored_otp, expiration_time = otp_store[email]
+    current_time = int(time.time())
+    
+    if current_time > expiration_time:
         # OTP expired
         del otp_store[email]
         return False
     
-    if otp == stored_otp:
-        # OTP verified, clean up
+    if stored_otp == otp:
+        # OTP valid, remove it after successful verification
         del otp_store[email]
         return True
     
