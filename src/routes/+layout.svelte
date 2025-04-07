@@ -601,14 +601,40 @@
 	position="top-right"
 />
 
-<style global>
-  /* Sfondo per elementi specifici */
-  .chat-container, .settings-panel {
-    background-color: #bae6fd !important;  /* Azzurro medio (sky-200) */
-  }
+<!-- Aggiungiamo un footer fisso con sfondo trasparente -->
+<div class="fixed bottom-0 left-0 right-0 py-2 bg-transparent text-sky-600 dark:text-sky-300 text-center text-sm font-medium z-10 border-t border-sky-200/50 dark:border-sky-800/30">
+    BRIDGE: a SEA-EU project
+</div>
 
-  /* Sfondo per la sidebar */
-  nav.sidebar {
-    background-color: #7dd3fc !important;  /* Azzurro più intenso (sky-300) */
-  }
+<style global>
+    :global(body) {
+        /* Aggiungiamo padding-bottom per evitare che il contenuto finisca sotto il footer */
+        padding-bottom: 2.5rem;
+    }
+    
+    /* Sfondo per elementi specifici */
+    .chat-container, .settings-panel, .modal-ux-content, .opblock-body, .response-col_description {
+        background-color: #bae6fd !important;  /* Azzurro medio (sky-200) */
+    }
+
+    /* Sfondo per la sidebar e la navigazione */
+    nav.sidebar, .topbar, .scheme-container, #nav {
+        background-color: #7dd3fc !important;  /* Azzurro più intenso (sky-300) */
+    }
+    
+    /* Elementi di input */
+    .opblock-section-header, .parameters-col_description, input, select, textarea {
+        background-color: #e0f2fe !important; /* Azzurro chiaro (sky-100) */
+    }
+    
+    /* Sovrascrivi il colore dello sfondo per elementi che compaiono sia in modalità chiara che scura */
+    .dark\:bg-gray-800, .dark\:bg-gray-900, .bg-white, .dark\:from-gray-800 {
+        background-color: #bae6fd !important;
+        background: #bae6fd !important;
+    }
+    
+    /* Assicura che i dropdown e i menu abbiano lo sfondo azzurro */
+    .dropdown-menu, .dropdown-content, .menu, .menu-content {
+        background-color: #7dd3fc !important;
+    }
 </style>

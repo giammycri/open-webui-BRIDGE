@@ -21,6 +21,20 @@ export default {
 					850: 'var(--color-gray-850, #262626)',
 					900: 'var(--color-gray-900, #171717)',
 					950: 'var(--color-gray-950, #0d0d0d)'
+				},
+				// Aggiungiamo colori personalizzati di sfondo azzurri
+				sky: {
+					100: '#e0f2fe',
+					200: '#bae6fd',
+					300: '#7dd3fc',
+					400: '#38bdf8',
+					500: '#0ea5e9'
+				},
+				// Override per la modalità dark con tonalità blu più scuro
+				darkBlue: {
+					700: '#1d4ed8',
+					800: '#1e40af',
+					900: '#1e3a8a'
 				}
 			},
 			typography: {

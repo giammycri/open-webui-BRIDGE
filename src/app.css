@@ -373,20 +373,39 @@ input[type='number'] {
 	font-weight: 700;
 }
 
-
-
 /*added*/
 body {
 	background-color: #e0f2fe !important;  /* Azzurro chiaro di Tailwind (sky-100) */
 	min-height: 100vh;
-  }
+}
   
-  /* Sovrascrivi gli sfondi dei contenitori principali */
-  .main-container, .dark\:bg-gray-800 {
+/* Sovrascrivi gli sfondi dei contenitori principali */
+.main-container, .dark\:bg-gray-800, .dark\:bg-gray-900, .bg-white {
 	background-color: transparent !important;
-  }
+}
   
-  /* Rimuovi eventuali immagini di sfondo */
-  .bg-gradient-to-br, .bg-cover {
+/* Rimuovi eventuali immagini di sfondo */
+.bg-gradient-to-br, .bg-cover, .bg-gradient-to-t {
 	background-image: none !important;
-  }
+}
+
+/* Applica sfondo azzurro a tutti i contenitori principali */
+.app, .wrapper, .opblock-body, .swagger-ui .wrapper, .auth-wrapper {
+	background-color: #e0f2fe !important;
+}
+
+/* Elementi specifici con varianti di azzurro */
+.app > div, #nav, .sidebar, .model-box {
+	background-color: #bae6fd !important;  /* Azzurro medio (sky-200) */
+}
+
+/* Elementi di input e form */
+textarea, input, select, .parameter__name, .opblock-summary {
+	background-color: #dbeafe !important;  /* Azzurro più chiaro (blue-100) */
+}
+
+/* Assicura che il testo rimanga leggibile su sfondo azzurro */
+.dark {
+	--color-gray-800: #1d4ed8; /* blue-700 per dark mode */
+	--color-gray-900: #1e40af; /* blue-800 per dark mode */
+}
