@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Optional, List
 from datetime import date
 from enum import Enum
 
@@ -85,6 +85,18 @@ class UserModel(BaseModel):
     def is_profile_completed(self) -> bool:
         return self.info.get("is_profile_completed", False) if self.info else False
 
+    @property
+    def preferred_language(self) -> Optional[str]:
+        return self.info.get("preferred_language") if self.info else None
+
+    @property
+    def interaction_type(self) -> Optional[str]:
+        return self.info.get("interaction_type") if self.info else None
+
+    @property
+    def interests(self) -> Optional[List[str]]:
+        return self.info.get("interests") if self.info else None
+
 
 ####################
 # Forms
@@ -100,6 +112,9 @@ class UserResponse(BaseModel):
     gender: Optional[str] = None
     country: Optional[str] = None
     birthdate: Optional[date] = None
+    preferred_language: Optional[str] = None
+    interaction_type: Optional[str] = None
+    interests: Optional[List[str]] = None
     is_profile_completed: Optional[bool] = False
 
 
@@ -159,10 +174,42 @@ class EuropeanCountry(str, Enum):
     SWEDEN = "Sweden"
 
 
+class PreferredLanguage(str, Enum):
+    ITALIAN = "italian"
+    ENGLISH = "english"
+    SPANISH = "spanish"
+    FRENCH = "french"
+    GERMAN = "german"
+
+class InteractionType(str, Enum):
+    CHAT = "chat"
+    AUDIO = "audio"
+
+class Interest(str, Enum):
+    TECHNOLOGY = "technology"
+    SCIENCE = "science"
+    ARTS = "arts"
+    SPORTS = "sports"
+    TRAVEL = "travel"
+    COOKING = "cooking"
+    READING = "reading"
+    MUSIC = "music"
+    MOVIES = "movies"
+    GAMING = "gaming"
+    EDUCATION = "education"
+    BUSINESS = "business"
+    HEALTH = "health"
+    FASHION = "fashion"
+    PHOTOGRAPHY = "photography"
+
+
 class UserProfileForm(BaseModel):
     gender: Gender
     country: EuropeanCountry
     birthdate: date
+    preferred_language: PreferredLanguage
+    interaction_type: InteractionType
+    interests: List[Interest] = []
 
 
 class UsersTable:
@@ -417,6 +464,36 @@ class UsersTable:
                 user.info["gender"] = gender
                 user.info["country"] = country
                 user.info["birthdate"] = birthdate.isoformat() if birthdate else None
+                user.info["is_profile_completed"] = True
+                
+                # Aggiorna il record
+                db.commit()
+                db.refresh(user)
+                
+                return UserModel.model_validate(user)
+        except Exception:
+            return None
+
+    def update_user_profile(self, user_id: str, gender: str, country: str, birthdate: date, 
+                            preferred_language: str, interaction_type: str, interests: List[str]) -> Optional[UserModel]:
+        try:
+            with get_db() as db:
+                user = db.query(User).filter_by(id=user_id).first()
+                
+                if not user:
+                    return None
+                
+                # Inizializza info se non esiste
+                if user.info is None:
+                    user.info = {}
+                
+                # Aggiungi i dati del profilo
+                user.info["gender"] = gender
+                user.info["country"] = country
+                user.info["birthdate"] = birthdate.isoformat() if birthdate else None
+                user.info["preferred_language"] = preferred_language
+                user.info["interaction_type"] = interaction_type
+                user.info["interests"] = interests
                 user.info["is_profile_completed"] = True
                 
                 # Aggiorna il record

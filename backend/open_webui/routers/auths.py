@@ -969,10 +969,11 @@ async def get_api_key(user=Depends(get_current_user)):
 # Aggiungi questo import se non esiste
 from open_webui.models.users import UserModel, UserProfileForm, Gender, EuropeanCountry
 
-# Aggiungi il nuovo endpoint
+# Aggiorna l'endpoint complete-profile
+
 @router.post("/complete-profile", response_model=UserResponse)
 async def complete_profile(
-    form_data: UserProfileForm, 
+    form_data: UserProfileForm,
     current_user: UserModel = Depends(get_current_user)
 ):
     # Aggiorna il profilo
@@ -980,7 +981,10 @@ async def complete_profile(
         current_user.id,
         form_data.gender,
         form_data.country,
-        form_data.birthdate
+        form_data.birthdate,
+        form_data.preferred_language,
+        form_data.interaction_type,
+        form_data.interests
     )
     
     if not user:
@@ -999,5 +1003,8 @@ async def complete_profile(
         "gender": user.gender,
         "country": user.country,
         "birthdate": user.birthdate,
+        "preferred_language": user.preferred_language,
+        "interaction_type": user.interaction_type,
+        "interests": user.interests,
         "is_profile_completed": user.is_profile_completed
     }
