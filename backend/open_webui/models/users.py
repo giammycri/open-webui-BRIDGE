@@ -1,5 +1,7 @@
 import time
 from typing import Optional
+from datetime import date
+from enum import Enum
 
 from open_webui.internal.db import Base, JSONField, get_db
 
@@ -61,6 +63,28 @@ class UserModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    @property
+    def gender(self) -> Optional[str]:
+        return self.info.get("gender") if self.info else None
+
+    @property
+    def country(self) -> Optional[str]:
+        return self.info.get("country") if self.info else None
+
+    @property
+    def birthdate(self) -> Optional[date]:
+        bd_str = self.info.get("birthdate") if self.info else None
+        if bd_str:
+            try:
+                return date.fromisoformat(bd_str)
+            except:
+                return None
+        return None
+
+    @property
+    def is_profile_completed(self) -> bool:
+        return self.info.get("is_profile_completed", False) if self.info else False
+
 
 ####################
 # Forms
@@ -73,6 +97,10 @@ class UserResponse(BaseModel):
     email: str
     role: str
     profile_image_url: str
+    gender: Optional[str] = None
+    country: Optional[str] = None
+    birthdate: Optional[date] = None
+    is_profile_completed: Optional[bool] = False
 
 
 class UserNameResponse(BaseModel):
@@ -92,6 +120,49 @@ class UserUpdateForm(BaseModel):
     email: str
     profile_image_url: str
     password: Optional[str] = None
+
+
+class Gender(str, Enum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+    PREFER_NOT_TO_SAY = "prefer_not_to_say"
+
+
+class EuropeanCountry(str, Enum):
+    AUSTRIA = "Austria"
+    BELGIUM = "Belgium"
+    BULGARIA = "Bulgaria"
+    CROATIA = "Croatia"
+    CYPRUS = "Cyprus"
+    CZECH_REPUBLIC = "Czech Republic"
+    DENMARK = "Denmark"
+    ESTONIA = "Estonia"
+    FINLAND = "Finland"
+    FRANCE = "France"
+    GERMANY = "Germany"
+    GREECE = "Greece"
+    HUNGARY = "Hungary"
+    IRELAND = "Ireland"
+    ITALY = "Italy"
+    LATVIA = "Latvia"
+    LITHUANIA = "Lithuania"
+    LUXEMBOURG = "Luxembourg"
+    MALTA = "Malta"
+    NETHERLANDS = "Netherlands"
+    POLAND = "Poland"
+    PORTUGAL = "Portugal"
+    ROMANIA = "Romania"
+    SLOVAKIA = "Slovakia"
+    SLOVENIA = "Slovenia"
+    SPAIN = "Spain"
+    SWEDEN = "Sweden"
+
+
+class UserProfileForm(BaseModel):
+    gender: Gender
+    country: EuropeanCountry
+    birthdate: date
 
 
 class UsersTable:
@@ -329,6 +400,32 @@ class UsersTable:
         with get_db() as db:
             users = db.query(User).filter(User.id.in_(user_ids)).all()
             return [user.id for user in users]
+
+    def update_user_profile(self, user_id: str, gender: str, country: str, birthdate: date) -> Optional[UserModel]:
+        try:
+            with get_db() as db:
+                user = db.query(User).filter_by(id=user_id).first()
+                
+                if not user:
+                    return None
+                
+                # Inizializza info se non esiste
+                if user.info is None:
+                    user.info = {}
+                
+                # Aggiungi i dati del profilo
+                user.info["gender"] = gender
+                user.info["country"] = country
+                user.info["birthdate"] = birthdate.isoformat() if birthdate else None
+                user.info["is_profile_completed"] = True
+                
+                # Aggiorna il record
+                db.commit()
+                db.refresh(user)
+                
+                return UserModel.model_validate(user)
+        except Exception:
+            return None
 
 
 Users = UsersTable()

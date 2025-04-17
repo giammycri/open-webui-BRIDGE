@@ -51,7 +51,13 @@
                 await user.set(data);
                 await config.set(await getBackendConfig());
                 toast.success($i18n.t('Account verified successfully.'));
-                goto('/');
+                
+                // Controlla se il profilo è completo
+                if (!data.is_profile_completed) {
+                    goto('/auth/complete-profile');
+                } else {
+                    goto('/');
+                }
             }
         } catch (error) {
             toast.error(error.message || $i18n.t('Verification failed. Please try again.'));

@@ -18,7 +18,7 @@ from open_webui.models.auths import (
     UpdateProfileForm,
     UserResponse,
 )
-from open_webui.models.users import Users
+from open_webui.models.users import Users, UserResponse
 
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
@@ -965,3 +965,39 @@ async def get_api_key(user=Depends(get_current_user)):
         }
     else:
         raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)
+
+# Aggiungi questo import se non esiste
+from open_webui.models.users import UserModel, UserProfileForm, Gender, EuropeanCountry
+
+# Aggiungi il nuovo endpoint
+@router.post("/complete-profile", response_model=UserResponse)
+async def complete_profile(
+    form_data: UserProfileForm, 
+    current_user: UserModel = Depends(get_current_user)
+):
+    # Aggiorna il profilo
+    user = Users.update_user_profile(
+        current_user.id,
+        form_data.gender,
+        form_data.country,
+        form_data.birthdate
+    )
+    
+    if not user:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update profile"
+        )
+    
+    # Ritorna la risposta con i dati aggiornati
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "profile_image_url": user.profile_image_url,
+        "gender": user.gender,
+        "country": user.country,
+        "birthdate": user.birthdate,
+        "is_profile_completed": user.is_profile_completed
+    }
