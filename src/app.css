@@ -375,7 +375,7 @@ input[type='number'] {
 
 /*added*/
 body {
-	background-color: #e0f2fe !important;  /* Azzurro chiaro di Tailwind (sky-100) */
+	background-color: #f0f9ff !important;  /* Azzurro molto chiaro di Tailwind (sky-50) */
 	min-height: 100vh;
 }
   
@@ -391,21 +391,82 @@ body {
 
 /* Applica sfondo azzurro a tutti i contenitori principali */
 .app, .wrapper, .opblock-body, .swagger-ui .wrapper, .auth-wrapper {
-	background-color: #e0f2fe !important;
+	background-color: #f0f9ff !important;
 }
 
 /* Elementi specifici con varianti di azzurro */
 .app > div, #nav, .sidebar, .model-box {
-	background-color: #bae6fd !important;  /* Azzurro medio (sky-200) */
+	background-color: #dbeafe !important;  /* Azzurro più chiaro (blue-100) */
 }
 
 /* Elementi di input e form */
 textarea, input, select, .parameter__name, .opblock-summary {
-	background-color: #dbeafe !important;  /* Azzurro più chiaro (blue-100) */
+	background-color: #f1f5f9 !important;  /* Azzurro più chiaro (slate-100) */
 }
 
 /* Assicura che il testo rimanga leggibile su sfondo azzurro */
 .dark {
 	--color-gray-800: #1d4ed8; /* blue-700 per dark mode */
 	--color-gray-900: #1e40af; /* blue-800 per dark mode */
+}
+
+/* Text color adjustments for readability on light background */
+.text-white, .dark .text-white {
+    color: #1e3a5f !important; /* Dark blue instead of white */
+}
+
+.text-gray-100, .dark .text-gray-100,
+.text-gray-200, .dark .text-gray-200,
+.text-gray-300, .dark .text-gray-300,
+.text-gray-400, .dark .text-gray-400 {
+    color: #2d4a6d !important; /* Darker blue for light gray texts */
+}
+
+/* Override text colors in dark mode */
+.dark {
+    --color-gray-100: #1e3a5f;
+    --color-gray-200: #1e3a5f;
+    --color-gray-300: #1e3a5f;
+    --color-gray-400: #2d4a6d;
+}
+
+/* Ensure form inputs and other elements remain readable */
+input, textarea, select {
+    color: #1e3a5f !important;
+}
+
+/* Improve visibility for placeholder text */
+::placeholder {
+    color: #4b5563 !important;
+    opacity: 0.8 !important;
+}
+
+/* Ensure buttons have readable text */
+button {
+    color: #1e3a5f !important;
+}
+
+/* Exception for buttons with dark backgrounds */
+.bg-black button, 
+.bg-gray-800 button, 
+.bg-gray-900 button,
+.bg-indigo-500 button,
+button.bg-black,
+button.bg-gray-800,
+button.bg-gray-900,
+button.bg-indigo-500 {
+    color: #ffffff !important;
+}
+
+/* Override shimmer effect text colors */
+.shimmer {
+    background: linear-gradient(90deg, #1e3a5f 25%, #4a69a0 50%, #1e3a5f 75%) !important;
+    -webkit-text-fill-color: transparent !important;
+    color: #1e3a5f !important; /* Fallback color */
+}
+
+.dark .shimmer {
+    background: linear-gradient(90deg, #1e3a5f 25%, #4a69a0 50%, #1e3a5f 75%) !important;
+    -webkit-text-fill-color: transparent !important;
+    color: #1e3a5f !important; /* Darker fallback color for dark mode */
 }

@@ -757,31 +757,3 @@ export const deleteAPIKey = async (token: string) => {
 	}
 	return res;
 };
-
-export const completeUserProfile = async (profileData) => {
-    let error = null;
-
-    const res = await fetch(`${WEBUI_API_BASE_URL}/auths/complete-profile`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.token}`
-        },
-        body: JSON.stringify(profileData)
-    })
-    .then(async (res) => {
-        if (!res.ok) throw await res.json();
-        return res.json();
-    })
-    .catch((err) => {
-        console.log(err);
-        error = err.detail;
-        return null;
-    });
-
-    if (error) {
-        throw error;
-    }
-
-    return res;
-};
