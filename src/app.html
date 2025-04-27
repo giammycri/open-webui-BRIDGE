@@ -36,6 +36,45 @@
 			.flex.w-full.text-center.items-center.justify-center.self-start.text-gray-400.dark\:text-gray-600 {
 				display: none !important;
 			}
+
+			/* Improved contrast for modal windows and dialogs */
+			.modal, .dialog, .dropdown-content, .popover, .card {
+				backdrop-filter: blur(10px);
+				background-color: rgba(23, 23, 23, 0.95) !important; /* Dark background with high opacity */
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+			}
+			
+			/* Light mode adjustments */
+			html.light .modal, html.light .dialog, html.light .dropdown-content, html.light .popover, html.light .card {
+				background-color: rgba(255, 255, 255, 0.95) !important;
+				border: 1px solid rgba(0, 0, 0, 0.1);
+			}
+			
+			/* Improved text contrast */
+			.text-gray-400, .text-gray-500, .text-gray-600 {
+				color: rgba(229, 231, 235, 0.9) !important; /* Lighter gray for better visibility */
+			}
+			
+			html.light .text-gray-400, html.light .text-gray-500, html.light .text-gray-600 {
+				color: rgba(55, 65, 81, 0.9) !important;
+			}
+			
+			/* Improved button contrast */
+			button, .btn {
+				border: 1px solid rgba(255, 255, 255, 0.1);
+			}
+			
+			/* Input fields with better contrast */
+			input, textarea, select {
+				background-color: rgba(17, 24, 39, 0.8) !important;
+				border: 1px solid rgba(255, 255, 255, 0.1) !important;
+			}
+			
+			html.light input, html.light textarea, html.light select {
+				background-color: rgba(255, 255, 255, 0.9) !important;
+				border: 1px solid rgba(0, 0, 0, 0.1) !important;
+			}
 		</style>
 
 		<script>
